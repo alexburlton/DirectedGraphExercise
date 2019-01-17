@@ -149,6 +149,42 @@ class GraphTest
     }
 
     @Test
+    fun testNoDuplicateChildren()
+    {
+        val graph = constructGraphWithThreeLinkedNodes()
+        val result = graph.addLink("Parent", "Child")
+        val children = graph.getChildren("Parent")!!
+
+        assertFalse(result)
+        assertThat(children.size, equalTo(1))
+    }
+
+    @Test
+    fun testNoSingleCycles()
+    {
+        val graph = Graph()
+        graph.addNode("A")
+        val result = graph.addLink("A", "A")
+        val children = graph.getChildren("A")!!
+
+        assertFalse(result)
+        assertTrue(children.isEmpty())
+    }
+
+    @Test
+    fun testNoLongCycles()
+    {
+        val graph = Graph()
+
+        graph.addLink("A", "B")
+        graph.addLink("B", "C")
+        val result = graph.addLink("C", "A")
+
+
+        assertFalse(result)
+    }
+
+    @Test
     fun testFindingNodeDepth()
     {
         val graph = constructGraphWithThreeLinkedNodes()

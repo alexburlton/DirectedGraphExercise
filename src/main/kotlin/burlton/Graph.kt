@@ -2,17 +2,22 @@ package burlton
 
 class Graph
 {
-    private val hmNodeToChildren = mutableMapOf<String, MutableList<String>>()
+    private val hmNodeToChildren = mutableMapOf<String, MutableSet<String>>()
 
     fun addNode(node: String)
     {
-        hmNodeToChildren[node] = mutableListOf()
+        hmNodeToChildren[node] = mutableSetOf()
     }
 
     fun addLink(parent: String, child: String): Boolean
     {
         //Check we're not creating a cycle
         if (relationshipExists(child, parent))
+        {
+            return false
+        }
+
+        if (parent == child)
         {
             return false
         }
@@ -48,8 +53,12 @@ class Graph
 
     fun relationshipExists(parent: String, child: String): Boolean
     {
-        val list = hmNodeToChildren[parent] ?: return false
+        if (!hmNodeToChildren.containsKey(parent))
+        {
+            return false
+        }
 
+        val list = getAllChildren(parent)
         return list.contains(child)
     }
 
@@ -77,12 +86,13 @@ class Graph
 
     fun getDepth(node: String): Int
     {
-        if (!hmNodeToChildren.contains(node))
+        val children = hmNodeToChildren[node] ?: return -1
+        if (children.isEmpty())
         {
-            return -1
+            return 0
         }
 
-        return 1
+        return 1 + children.map{it -> getDepth(it)}.max()!!
     }
 
     fun size(): Int = hmNodeToChildren.size
