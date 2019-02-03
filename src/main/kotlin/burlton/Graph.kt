@@ -2,6 +2,7 @@ package burlton
 
 class Graph
 {
+    private val synchObject = Any()
     private val hmNodeToChildren = mutableMapOf<String, MutableSet<String>>()
 
     fun addNode(node: String)
@@ -11,30 +12,33 @@ class Graph
 
     fun addLink(parent: String, child: String): Boolean
     {
-        //Check we're not creating a cycle
-        if (relationshipExists(child, parent))
+        synchronized (synchObject)
         {
-            return false
+            //Check we're not creating a cycle
+            if (relationshipExists(child, parent))
+            {
+                return false
+            }
+
+            if (parent == child)
+            {
+                return false
+            }
+
+            if (!hmNodeToChildren.containsKey(parent))
+            {
+                addNode(parent)
+            }
+
+            val result = hmNodeToChildren[parent]!!.add(child)
+
+            if (!hmNodeToChildren.containsKey(child))
+            {
+                addNode(child)
+            }
+
+            return result
         }
-
-        if (parent == child)
-        {
-            return false
-        }
-
-        if (!hmNodeToChildren.containsKey(parent))
-        {
-            addNode(parent)
-        }
-
-        hmNodeToChildren[parent]!!.add(child)
-
-        if (!hmNodeToChildren.containsKey(child))
-        {
-            addNode(child)
-        }
-
-        return true
     }
 
     fun getAllChildren(parent: String): MutableSet<String>
@@ -92,7 +96,7 @@ class Graph
             return 0
         }
 
-        return 1 + children.map{it -> getDepth(it)}.max()!!
+        return 1 + children.map{getDepth(it)}.max()!!
     }
 
     fun size(): Int = hmNodeToChildren.size

@@ -200,4 +200,27 @@ class GraphTest
         assertThat(childDepth, equalTo(0))
         assertThat(miscDepth, equalTo(-1))
     }
+
+    @Test
+    fun testMultiThreadedCycle()
+    {
+        val graph = Graph()
+
+        for (i in 1..100)
+        {
+            val r1 = Runnable{graph.addLink("A$i", "B$i")}
+            val r2 = Runnable{graph.addLink("B$i", "A$i")}
+
+            val t1 = Thread(r1)
+            val t2 = Thread(r2)
+
+            t1.start()
+            t2.start()
+
+            t1.join()
+            t2.join()
+
+            assertFalse(graph.relationshipExists("A$i", "B$i") && graph.relationshipExists("B$i", "A$i"))
+        }
+    }
 }
